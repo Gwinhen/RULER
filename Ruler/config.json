@@ -1,0 +1,18 @@
+{
+  "gpu_id": 0,
+  "lr": 0.003,
+  "batch_size": 128,
+  "weight_decay": 0.0005,
+  "adv_epochs": 70,
+  "save_path": "results_Adv_motivation_local",
+  "seed": 116,
+  "accuracy_threshold": -1,
+  "attack_steps": 1,
+  "attack_eps": 8,
+  "attack_lr": 1,
+  "mode": "train",
+  "adv_ratio":0.5,
+  "dataset": "adult",
+  "model_load_pth": null,
+  "protected_attribs": [0,  6, 7]
+}
