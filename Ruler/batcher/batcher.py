@@ -1,4 +1,4 @@
-# next batch 函数，作用就是同时 attack 和 划分 batch
+
 import sys
 from math import floor
 import numpy as np
@@ -35,17 +35,17 @@ class Batcher(object):
     def next_batch_original(self, model, start, x_set, y_set):
         # print('I ma in original')
         if start + self.batch_size < self.limit:
-            x_ori = x_set[start:start + self.batch_size, :]  # train_set 太大了，只要一个 batch的 部分
+            x_ori = x_set[start:start + self.batch_size, :]
             y = y_set[start:start + self.batch_size]
         else:
             self.batch_size = self.limit - 1
-            x_ori = x_set[start:start + self.batch_size, :]  # train_set 太大了，只要一个 batch的 部分
+            x_ori = x_set[start:start + self.batch_size, :]
             y = y_set[start:start + self.batch_size]
         x_ori = x_ori.astype(np.float32)
         x_ori = torch.from_numpy(x_ori).to(self.device)
         y = y.astype(np.longlong)
         y = torch.from_numpy(y).to(self.device)
-        end = start + self.batch_size  # 注意这个 cur_adv_sample_num 的记录
+        end = start + self.batch_size
         cur_adv_sample_num, x_adv = self.attacker.attack_original(x_ori, y, model)
         return cur_adv_sample_num, end, x_adv, y
 
@@ -62,11 +62,11 @@ class Batcher(object):
         # x_set = train_set.train_x()
         # y_set = train_set.train_y()
         if start + self.batch_size < self.limit:
-            x_ori = x_set[start:start + self.batch_size, :]  # train_set 太大了，只要一个 batch的 部分
+            x_ori = x_set[start:start + self.batch_size, :]
             y = y_set[start:start + self.batch_size]
         else:
             self.batch_size = self.limit - 1
-            x_ori = x_set[start:start + self.batch_size, :]  # train_set 太大了，只要一个 batch的 部分
+            x_ori = x_set[start:start + self.batch_size, :]
             y = y_set[start:start + self.batch_size]
         x_ori = x_ori.astype(np.float32)
         x_ori = torch.from_numpy(x_ori).to(self.device)
@@ -74,8 +74,8 @@ class Batcher(object):
         y = torch.from_numpy(y).to(self.device)
         adv_samples = []
         adv_y = []
-        cur_batch_size = index = cur_adv_sample_num = end = 0  # 注意这个 cur_adv_sample_num 的记录
-        flag_adv = True  # 控制是否攻击，如果超过了，就不会进行攻击
+        cur_batch_size = index = cur_adv_sample_num = end = 0
+        flag_adv = True
         while index < self.batch_size:
             flag = False
             x_ori_sample = torch.unsqueeze(x_ori[index, :], 0)
@@ -93,10 +93,8 @@ class Batcher(object):
                 adv_samples.append(x_ori_sample)
                 adv_y.append(y_sample)
                 cur_batch_size += 1
-            # 添加一个判断 cur_adv_ratio 是否等于 0.2 通过cur_adv_sample_num 判断
             if flag_adv and cur_adv_sample_num >= self.adv_sample_limit:
-                # 此时，需要直接补齐 adv_sample 令 adv_sample.size = batch_size
-                flag_adv = False  # false,将不会进行攻击
+                flag_adv = False
             if cur_batch_size == self.batch_size:
                 end = start + index + 1
                 break

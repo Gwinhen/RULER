@@ -5,8 +5,6 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 
 
-# 不用独热编码, 而是采用和 EIDIG 相同的策略, 分类变量全部转换为 numerical
-# 转换的方式采用 scikit-learn.preprocess.LabelEncoder
 def transform_dataset(df):
     """
     :param df:
@@ -29,9 +27,7 @@ def transform_dataset(df):
     del df_binary['two_year_recid']
     del df_binary['score_text']
 
-    # 查看一下每个变量分别是什么类型:
     # print(df_binary.dtypes)
-    # 0(sex), 1(age_cat), 2(race), 10(c_charge_degree) 需要转成分类变量
 
     label_encoder = preprocessing.LabelEncoder()
     data_to_encode = df_binary.to_numpy()
@@ -53,7 +49,7 @@ df = pd.read_csv(data_path, encoding='latin-1')  # 6127*17
 print('ori data shape is {}'.format(df.shape))
 
 # df_binary 6172*17 <class 'tuple'>;其他都是 Series
-X, y = transform_dataset(df)  # FN 就是这样的调用接口
+X, y = transform_dataset(df)
 
 X = X.astype(np.int32)
 y = y.astype(np.int32)

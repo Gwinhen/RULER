@@ -52,7 +52,6 @@ class PGDAttacker(object):
         self.protected_attribs = protected_attribs
         self.constraint = constraint
 
-    # 注意这里的 y 其实是 y_true
     def compute_grad(self, x, y, net):
         x_back = torch.detach(x)
         x_back.requires_grad = True
@@ -73,13 +72,11 @@ class PGDAttacker(object):
         x_back.detach()
         return y_pred
 
-    # 令 x 的 attribs 在定义域范围内
     def clip(self, x, attribs):
         for attrib in attribs:
             x[:, attrib] = torch.clamp(x[:, attrib], self.constraint[attrib, 0], self.constraint[attrib, 1])
         return x
 
-    # 仅仅根据梯度攻击 1 就好
     def attack_non_protected(self, x, net, y_true):
         """
         :param x:The sample passed from lasy phase
@@ -94,7 +91,7 @@ class PGDAttacker(object):
         zeros = torch.zeros(x.size(), device=x.device)
         zeros[:, non_protected_attribs] = x[:, non_protected_attribs] + grad[:, non_protected_attribs]
         # print('before non_pro is \n{}'.format(x))
-        x[:, non_protected_attribs] = 0  # 一处细节，需要改进
+        x[:, non_protected_attribs] = 0
         x_adv = x + zeros
         x_adv = self.clip(x_adv, non_protected_attribs)
         y_pred = self.compute_ypred(x, net)
@@ -107,7 +104,6 @@ class PGDAttacker(object):
         else:
             return True, x.detach()
 
-    # attack_mode 作为参数传递并不完整
     def attack_protected(self, x, net, y_true, attack_steps, attack_lr):
         """
         The attack_mode 1 means attack all protected attribs at the
@@ -121,7 +117,6 @@ class PGDAttacker(object):
         """
         global TRY_TIMES
         x_adv_sample = x.clone()
-        "目前是整体攻击，即每次攻击 攻击整个sample"
         for step in range(attack_steps):
             TRY_TIMES += 1
             grad = self.compute_grad(x, y_true, net)
@@ -129,7 +124,7 @@ class PGDAttacker(object):
             zeros = torch.zeros(x_adv_sample.size(), device=x_adv_sample.device)
             zeros[:, self.protected_attribs] = x_adv_sample[:, self.protected_attribs] + (
                     attack_lr * grad[:, self.protected_attribs])
-            x_adv_sample[:, self.protected_attribs] = 0  # 一处细节，需要改进
+            x_adv_sample[:, self.protected_attribs] = 0
 
             x_adv_attrib = x_adv_sample + zeros
             x_adv_sample = self.clip(x_adv_attrib, self.protected_attribs)
@@ -157,15 +152,11 @@ class PGDAttacker(object):
         else:
             return flag, x_ori_sample
 
-    # 只需要在梯度方向扰动 1， 然后 clip 到 constraint 即可， 而且根本不需要管是否成功
-    # 都返回对抗样本, 注意，这里是整个 batch投入梯度攻击的
     def attack_original(self, x_ori_batch, y_batch, net):
         # print(x_ori_batch.shape)
         x_adv_sample = x_ori_batch.clone()
-        "目前是整体攻击，即每次攻击 攻击整个sample"
         grad = self.compute_grad(x_ori_batch, y_batch, net)
         # print("grad is {}".format(grad))
-        # 直接在整个 sample 上进行扰动
         x_adv_attrib = x_adv_sample + grad
         # print('shape is {}'.format(x_ori_sample.shape[1])) int 12
         x_adv_sample = self.clip(x_adv_attrib, range(0, x_ori_batch.shape[1]))
